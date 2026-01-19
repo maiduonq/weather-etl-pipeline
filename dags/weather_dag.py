@@ -5,7 +5,6 @@ import requests
 import pandas as pd
 from sqlalchemy import create_engine
 
-# --- CẤU HÌNH (THAY API KEY CỦA BẠN VÀO ĐÂY) ---
 API_KEY = "a5b4710b0ddc9ff59ae7188a2ef44b15" 
 CITY = "Hanoi"
 # Kết nối đến Postgres bên trong Docker
@@ -39,23 +38,19 @@ def extract_weather():
 
 def load_to_star_schema(ti):
     """Nạp dữ liệu vào mô hình Star Schema (Fact & Dimension)"""
-    # 1. Lấy dữ liệu từ bước Extract
     raw_data = ti.xcom_pull(task_ids='extract_weather_task')
     engine = create_engine(DB_CONN)
     
     # --- XỬ LÝ BẢNG DIMENSION (dim_city) ---
-    # Lưu thông tin tĩnh về thành phố
     city_id = 1 # Định danh cho Hanoi
     dim_city_df = pd.DataFrame([{
         'city_id': city_id,
         'city_name': raw_data['city_name'],
         'country': raw_data['country']
     }])
-    # Dùng if_exists='replace' để đảm bảo thông tin dim luôn duy nhất
     dim_city_df.to_sql('dim_city', engine, if_exists='replace', index=False)
     
     # --- XỬ LÝ BẢNG FACT (fact_weather) ---
-    # Lưu thông tin đo lường biến đổi theo thời gian
     fact_weather_df = pd.DataFrame([{
         'city_id': city_id, # Khóa ngoại liên kết sang dim_city
         'temp': raw_data['temp'],
@@ -64,12 +59,10 @@ def load_to_star_schema(ti):
         'description': raw_data['description'],
         'collected_at': raw_data['collected_at']
     }])
-    # Dùng if_exists='append' để lưu lịch sử
     fact_weather_df.to_sql('fact_weather', engine, if_exists='append', index=False)
     
     print("--- SUCCESS: DATA LOADED INTO STAR SCHEMA (DIM_CITY & FACT_WEATHER) ---")
 
-# --- ĐỊNH NGHĨA DAG ---
 with DAG(
     'weather_automated_pipeline',
     default_args=default_args,
