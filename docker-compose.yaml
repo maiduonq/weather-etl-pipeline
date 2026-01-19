@@ -1,0 +1,28 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=weather_db
+    ports:
+      - "5432:5432"
+
+  airflow:
+    image: apache/airflow:2.7.1-python3.9
+    container_name: airflow_app
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/weather_db
+      - AIRFLOW__CORE__FERNET_KEY=vL934P_o66G6fMh-p5B9M0B8S9eU8X3R6T5_Z2lY0_E=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__LOGGING_LEVEL=INFO
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    command: standalone
+    depends_on:
+      - postgres

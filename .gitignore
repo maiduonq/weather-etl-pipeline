@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+
+logs/
+
+standalone_admin_password.txt
+
+.DS_Store
+.env
+
+*.tmp
+*.log
